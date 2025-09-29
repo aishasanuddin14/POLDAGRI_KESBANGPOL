@@ -18,15 +18,12 @@
   .d-none{display:none!important}
   /* tampilkan semua kolom, biar wrap teks panjang */
   table.dataTable td, table.dataTable th { white-space: normal; }
-</style>
-<style>
+
   /* Matikan smooth scroll yang suka bikin “nyeloncat” */
   html { scroll-behavior: auto !important; }
-
   /* Jangan auto-scroll ke anchor pagination saat fokus */
   .dataTables_wrapper a:focus { outline: none !important; box-shadow: none !important; }
 </style>
-
 </head>
 <body>
 <div class="container py-4">
@@ -84,19 +81,12 @@
 
 <script>
 /* ====== LOCK SCROLL UTIL ====== */
-function __lockScroll() {
-  return { x: window.scrollX || 0, y: window.scrollY || 0 };
-}
-function __restoreScroll(pos) {
-  if (!pos) return;
-  window.scrollTo(pos.x, pos.y);
-}
+function __lockScroll() { return { x: window.scrollX || 0, y: window.scrollY || 0 }; }
+function __restoreScroll(pos) { if (pos) window.scrollTo(pos.x, pos.y); }
 </script>
-
 
 <script>
 /* ========= DATA TERTANAM (CSV) ========= */
-/* Pakai dataset yang kamu kirim kemarin. Jika mau, tinggal ganti konstanta RAW_CSV ini. */
 const RAW_CSV = `Nama Ormas;Jenis;Nama Ketua;Alamat;Latitude;Longitude;Lingkup;Status SKT;Status SKKO;Nomor HP;Kegiatan Ter-Deteksi (2024-2025);Akun Media Sosial/Group
 JPKP Halteng;Sosial;Sri Wahyuni;Desa Fidi Jaya;0.3504959340788942;12.785.643.040.161.500;Lokal;Belum Ada;Belum Lapor;+62 823-2445-9850;Tidak ada jejak;–
 Panjat Tebing (FPTI Halteng);Olahraga;Moh. Fitra U. Ali;Desa Nurweda;0.34160299912748765;1.278.476.213.816.390;Nasional;SKT Kemendagri;Belum Lapor;–;"Roadshow FPTI Maret 2025; Partisipasi lomba Panjat tebing Kota Ternate tahun 2025"
@@ -190,7 +180,7 @@ DPC GAPEKSINDO Halteng;Profesi;Tidak terverif;Weda Tengah;0.5180718143746648;12.
 LPMG Gebe;LSM/Advokasi;Tidak terverif;Pulau Gebe;-0.04916289321837482;1.294.055.360.089.350;Lokal;;Kadaluwarsa;–;Weda Tengah;"Advokasi pemekaran wilayah; demo tambang; Pelatihan kerajinan tangan (Jun 2024) https://www.facebook.com/groups/253201676127085/"
 LSM WAMPEL;LSM/Advokasi;Yusmar Ohorela;Weda;0.34160299912748765;1.278.476.213.816.390;Lokal;;Kadaluwarsa;–;"Weda Tengah Demo tuntut pejabat nasional; inventarisasi ormas siluman";Halteng`;
 
-/* ========= KOL0M ========= */
+/* ========= KOLOM ========= */
 const COLS = [
   'Nama Ormas','Jenis','Nama Ketua','Alamat','Latitude','Longitude',
   'Lingkup','Status SKT','Status SKKO','Nomor HP',
@@ -301,15 +291,20 @@ function drawTable(rows){
       }
     });
     // kunci posisi scroll agar tidak loncat saat sort/paginate/draw
-    let y = 0;
+    let __savedPos = {x:0,y:0};
     $('#ormasTable')
-      .on('preDraw.dt', function(){ y = window.scrollY; })
-      .on('draw.dt', function(){ window.scrollTo({top:y,left:0}); });
+      .on('preDraw.dt', function(){
+        __savedPos = __lockScroll();
+        if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+      })
+      .on('draw.dt', function(){
+        __restoreScroll(__savedPos);
+        setTimeout(()=>__restoreScroll(__savedPos), 30);
+      });
   }else{
-    // cegah DataTables auto-scroll dengan simpan lalu restore
-    const y = window.scrollY;
+    const pos = __lockScroll();
     DT.clear().rows.add(data).draw(false);
-    window.scrollTo({top:y,left:0});
+    __restoreScroll(pos);
     DT.columns.adjust();
   }
 }
@@ -363,12 +358,23 @@ function renderMap(rows){
 document.addEventListener('click', e=>{
   const btn = e.target.closest('.filter-badge'); if(!btn) return;
   e.preventDefault();
+
+  // Bekukan posisi sebelum redraw
+  const pos = __lockScroll();
+
   qsa('.filter-badge').forEach(b=>b.classList.toggle('active', b===btn));
   const subset = getSubset(btn.dataset.mode || 'all');
+
   qs('#mapSection').classList.remove('d-none');
   qs('#tableSection').classList.remove('d-none');
+
   renderMap(subset);
   drawTable(subset);
+
+  // Pulihkan posisi supaya tidak loncat
+  __restoreScroll(pos);
+  setTimeout(()=>__restoreScroll(pos), 30);
+  setTimeout(()=>__restoreScroll(pos), 120);
 }, {passive:false});
 
 qs('#reset').addEventListener('click', ()=>{
@@ -383,6 +389,7 @@ qs('#reset').addEventListener('click', ()=>{
   try{
     ALL = parseCSV(RAW_CSV, ';');
     updateBadges();
+    // default: peta & tabel disembunyikan sampai user klik badge
   }catch(err){
     const div = document.createElement('div');
     div.className = 'alert alert-danger';
@@ -390,37 +397,6 @@ qs('#reset').addEventListener('click', ()=>{
     document.querySelector('.container').prepend(div);
   }
 })();
-    
-    document.addEventListener('click', e=>{
-  const btn = e.target.closest('.filter-badge'); if(!btn) return;
-  e.preventDefault();
-
-  // Bekukan posisi sebelum redraw masif
-  const pos = __lockScroll();
-
-  document.querySelectorAll('.filter-badge')
-    .forEach(b=>b.classList.toggle('active', b===btn));
-
-  const subset = getSubset(btn.dataset.mode || 'all');
-  renderMap(subset);
-  drawTable(subset);
-
-  // Pulihkan posisi segera dan setelah layout settle
-  __restoreScroll(pos);
-  setTimeout(()=>__restoreScroll(pos), 30);
-  setTimeout(()=>__restoreScroll(pos), 120);
-}, {passive:false});
-// Hentikan default anchor "#" supaya halaman tidak lompat ke top
-document.addEventListener('click', function(e){
-  const a = e.target.closest('a[href="#"]');
-  if (a && a.closest('.dataTables_wrapper')) {
-    e.preventDefault();
-  }
-}, true);
-
 </script>
-
-
-
 </body>
 </html>
