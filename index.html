@@ -14,22 +14,17 @@
   #map{height:520px;border-radius:12px}
   .filter-badge.btn{border-radius:12px;padding:14px 10px;font-weight:600}
   .filter-badge.active{outline:2px solid #111;box-shadow:0 0 0 2px rgba(0,0,0,.08) inset}
- /* semula */
-.badge-pin{
-  background:#2563eb;color:#fff;border-radius:999px;
-  padding:.35rem .6rem;border:2px solid #1e40af;
-  box-shadow:0 2px 6px rgba(0,0,0,.2);
-  font-weight:700;font-size:.9rem;line-height:1;text-align:center;
-}
-/* jadi (lebih kecil) */
-.badge-pin{
-  background:#2563eb;color:#fff;border-radius:999px;
-  padding:.22rem .38rem;border:1.6px solid #1e40af;
-  box-shadow:0 2px 6px rgba(0,0,0,.2);
-  font-weight:700;font-size:.70rem;line-height:1;text-align:center;
+  .badge-pin{
+  background:#2563eb;color:#fff;border-radius:9999px;
+  border:1.6px solid #1e40af; box-shadow:0 2px 6px rgba(0,0,0,.2);
+  font-weight:700; font-size:.70rem; line-height:1;
+  /* kunci agar angka tidak turun-naik */
+  display:inline-flex; align-items:center; justify-content:center;
+  white-space:nowrap;                 /* jangan pernah bungkus jadi 2 baris */
+  min-width:28px; height:26px;        /* ruang cukup untuk “17” */
+  padding:0 .36rem;                   /* tipis saja biar muat */
 }
 
-  .d-none{display:none!important}
   /* tampilkan semua kolom, biar wrap teks panjang */
   table.dataTable td, table.dataTable th { white-space: normal; }
 
@@ -355,11 +350,11 @@ function renderMap(rows){
   qs('#tip').classList.add('d-none');
   keys.forEach(k=>{
     const g = groups[k];
-   const icon = L.divIcon({
+    const icon = L.divIcon({
   html:"<div class='badge-pin'>"+g.items.length+"</div>",
   className:"",
-  iconSize:[26,26],   // dari 36 jadi 26
-  iconAnchor:[13,13]  // setengahnya
+  iconSize:[30,26],    // lebar x tinggi
+  iconAnchor:[15,13]
 });
 
     const m = L.marker([g.lat,g.lng], {icon}).addTo(LAYER);
