@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Laporan Ormas Halteng — Semua Kolom, Anti-Loncat</title>
+<title>Laporan Ormas Halteng — Filter Desa, Anti-Loncat</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
@@ -14,45 +14,59 @@
   #map{height:520px;border-radius:12px}
   .filter-badge.btn{border-radius:12px;padding:14px 10px;font-weight:600}
   .filter-badge.active{outline:2px solid #111;box-shadow:0 0 0 2px rgba(0,0,0,.08) inset}
+  /* Marker angka: jangan pecah baris */
   .badge-pin{
-  background:#2563eb;color:#fff;border-radius:9999px;
-  border:1.6px solid #1e40af; box-shadow:0 2px 6px rgba(0,0,0,.2);
-  font-weight:700; font-size:.70rem; line-height:1;
-  /* kunci agar angka tidak turun-naik */
-  display:inline-flex; align-items:center; justify-content:center;
-  white-space:nowrap;                 /* jangan pernah bungkus jadi 2 baris */
-  min-width:28px; height:26px;        /* ruang cukup untuk “17” */
-  padding:0 .36rem;                   /* tipis saja biar muat */
-}
-
+    background:#2563eb;color:#fff;border-radius:999px;
+    padding:2px 8px;border:2px solid #1e40af;
+    box-shadow:0 2px 6px rgba(0,0,0,.2);
+    font-weight:700;font-size:.8rem;line-height:1;
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:30px; white-space:nowrap;
+  }
+  .d-none{display:none!important}
   /* tampilkan semua kolom, biar wrap teks panjang */
   table.dataTable td, table.dataTable th { white-space: normal; }
-
   /* Matikan smooth scroll yang suka bikin “nyeloncat” */
   html { scroll-behavior: auto !important; }
-  /* Jangan auto-scroll ke anchor pagination saat fokus */
+  /* Jangan auto-focus anchor/pagination DataTables */
   .dataTables_wrapper a:focus { outline: none !important; box-shadow: none !important; }
 </style>
 </head>
 <body>
 <div class="container py-4">
-  <header class="mb-3 text-center">
-    <h1 class="fw-bold">Laporan Keberadaan Ormas, Paguyuban, Lembaga — Halmahera Tengah</h1>
-    <p class="text-muted mb-0">Klik badge untuk filter. Peta dan tabel tampil bersamaan. Tidak ada auto-scroll yang nyebelin.</p>
+  <header class="mb-3">
+    <h1 class="fw-bold text-center">Laporan Keberadaan Ormas, Paguyuban, Lembaga — Halmahera Tengah</h1>
+    <p class="text-muted mb-0 text-center">Klik badge atau pilih Desa. Peta dan tabel tampil bersamaan. Scroll tidak loncat.</p>
   </header>
 
-  <!-- BADGES -->
+  <!-- BAR ATAS: Badges kiri, Dropdown Desa kanan -->
   <section class="mb-3">
-    <div class="row g-2 text-center">
-      <div class="col-6 col-md-2"><button type="button" class="btn btn-primary w-100 filter-badge" data-mode="all">Semua<br><span id="bAll" class="fs-5">0</span></button></div>
-      <div class="col-6 col-md-2"><button type="button" class="btn btn-success w-100 filter-badge" data-mode="skt">SKT Ada<br><span id="bSKT" class="fs-5">0</span></button></div>
-      <div class="col-6 col-md-2"><button type="button" class="btn btn-info text-dark w-100 filter-badge" data-mode="skko">SKKO Ada<br><span id="bSKKO" class="fs-5">0</span></button></div>
-      <div class="col-6 col-md-2"><button type="button" class="btn btn-warning text-dark w-100 filter-badge" data-mode="nasional">Nasional<br><span id="bNas" class="fs-5">0</span></button></div>
-      <div class="col-6 col-md-2"><button type="button" class="btn btn-secondary w-100 filter-badge" data-mode="lokal">Lokal/Daerah<br><span id="bLok" class="fs-5">0</span></button></div>
-      <div class="col-6 col-md-2"><button type="button" class="btn btn-dark w-100" disabled>Total<br><span id="bTotal" class="fs-5">0</span></button></div>
-    </div>
-    <div class="text-end mt-2">
-      <button id="reset" class="btn btn-outline-secondary btn-sm">Reset</button>
+    <div class="row g-2 align-items-end">
+      <div class="col-12 col-lg-8">
+        <div class="row g-2 text-center">
+          <div class="col-6 col-md-3">
+            <button type="button" class="btn btn-primary w-100 filter-badge" data-mode="all">Semua<br><span id="bAll" class="fs-5">0</span></button>
+          </div>
+          <div class="col-6 col-md-3">
+            <button type="button" class="btn btn-warning text-dark w-100 filter-badge" data-mode="nasional">Nasional<br><span id="bNas" class="fs-5">0</span></button>
+          </div>
+          <div class="col-6 col-md-3">
+            <button type="button" class="btn btn-secondary w-100 filter-badge" data-mode="lokal">Lokal/Daerah<br><span id="bLok" class="fs-5">0</span></button>
+          </div>
+          <div class="col-6 col-md-3">
+            <button type="button" class="btn btn-dark w-100" disabled>Total<br><span id="bTotal" class="fs-5">0</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-4">
+        <label for="desaSelect" class="form-label mb-1">Filter Desa/Lokasi</label>
+        <div class="d-flex gap-2">
+          <select id="desaSelect" class="form-select">
+            <option value="">— Semua Desa —</option>
+          </select>
+          <button id="reset" class="btn btn-outline-secondary">Reset</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -89,13 +103,24 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-/* ====== LOCK SCROLL UTIL ====== */
-function __lockScroll() { return { x: window.scrollX || 0, y: window.scrollY || 0 }; }
-function __restoreScroll(pos) { if (pos) window.scrollTo(pos.x, pos.y); }
+/* ====== SCROLL LOCK ====== */
+function lockScrollPos(){ return {x:window.scrollX||0, y:window.scrollY||0}; }
+function restoreScrollPos(p){
+  if(!p) return;
+  window.scrollTo(p.x,p.y);
+  setTimeout(()=>window.scrollTo(p.x,p.y), 50);
+  setTimeout(()=>window.scrollTo(p.x,p.y), 120);
+}
+/* cegah anchor "#" bikin halaman loncat */
+document.addEventListener('click', function(e){
+  const a = e.target.closest('a[href="#"]');
+  if(a && a.closest('.dataTables_wrapper')) e.preventDefault();
+}, true);
 </script>
 
 <script>
 /* ========= DATA TERTANAM (CSV) ========= */
+/* Ganti RAW_CSV ini kalau perlu. Gunakan delimiter ; sesuai file kamu. */
 const RAW_CSV = `Nama Ormas;Jenis;Nama Ketua;Alamat;Latitude;Longitude;Lingkup;Status SKT;Status SKKO;Nomor HP;Kegiatan Ter-Deteksi (2024-2025);Akun Media Sosial/Group
 JPKP Halteng;Sosial;Sri Wahyuni;Desa Fidi Jaya;0.3504959340788942;12.785.643.040.161.500;Lokal;Belum Ada;Belum Lapor;+62 823-2445-9850;Tidak ada jejak;–
 Panjat Tebing (FPTI Halteng);Olahraga;Moh. Fitra U. Ali;Desa Nurweda;0.34160299912748765;1.278.476.213.816.390;Nasional;SKT Kemendagri;Belum Lapor;–;"Roadshow FPTI Maret 2025; Partisipasi lomba Panjat tebing Kota Ternate tahun 2025"
@@ -189,7 +214,7 @@ DPC GAPEKSINDO Halteng;Profesi;Tidak terverif;Weda Tengah;0.5180718143746648;12.
 LPMG Gebe;LSM/Advokasi;Tidak terverif;Pulau Gebe;-0.04916289321837482;1.294.055.360.089.350;Lokal;;Kadaluwarsa;–;Weda Tengah;"Advokasi pemekaran wilayah; demo tambang; Pelatihan kerajinan tangan (Jun 2024) https://www.facebook.com/groups/253201676127085/"
 LSM WAMPEL;LSM/Advokasi;Yusmar Ohorela;Weda;0.34160299912748765;1.278.476.213.816.390;Lokal;;Kadaluwarsa;–;"Weda Tengah Demo tuntut pejabat nasional; inventarisasi ormas siluman";Halteng`;
 
-/* ========= KOLOM ========= */
+/* ========= KOL0M ========= */
 const COLS = [
   'Nama Ormas','Jenis','Nama Ketua','Alamat','Latitude','Longitude',
   'Lingkup','Status SKT','Status SKKO','Nomor HP',
@@ -198,15 +223,11 @@ const COLS = [
 
 /* ========= STATE & UTIL ========= */
 let ALL = [], DT = null, MAP = null, LAYER = null;
+const state = { mode:'all', desa:'' };
+
 const qs  = s => document.querySelector(s);
 const qsa = s => Array.from(document.querySelectorAll(s));
 const norm = v => String(v ?? '').trim();
-
-/* cegah anchor "#" bikin halaman loncat */
-document.addEventListener('click', function(e){
-  const a = e.target.closest('a[href="#"]');
-  if(a){ e.preventDefault(); }
-}, true);
 
 /* angka multi-titik -> desimal, auto-swap lat/lng */
 function toNum(v){
@@ -246,32 +267,43 @@ function parseCSV(text, delimiter=';'){
   return out;
 }
 
-/* ========= BADGES ========= */
+/* ========= BADGES & DROPDOWN ========= */
 function updateBadges(){
   qs('#bTotal').textContent = ALL.length;
   qs('#bAll').textContent   = ALL.length;
-  qs('#bSKT').textContent   = ALL.filter(r=>norm(r['Status SKT'])).length;
-  qs('#bSKKO').textContent  = ALL.filter(r=>norm(r['Status SKKO'])).length;
   qs('#bNas').textContent   = ALL.filter(r=>norm(r['Lingkup']).toLowerCase().includes('nasional')).length;
   qs('#bLok').textContent   = ALL.filter(r=>{
     const s = norm(r['Lingkup']).toLowerCase();
     return s.includes('lokal') || s.includes('daerah');
   }).length;
 }
+function fillDesaDropdown(){
+  const set = new Set();
+  ALL.forEach(r=>{
+    const a = norm(r['Alamat']);
+    if(a) set.add(a);
+  });
+  const list = Array.from(set).sort((a,b)=>a.localeCompare(b,'id'));
+  const sel = qs('#desaSelect');
+  sel.innerHTML = '<option value="">— Semua Desa —</option>' + list.map(v=>`<option value="${v.replace(/"/g,'&quot;')}">${v}</option>`).join('');
+}
 
-/* ========= FILTER ========= */
-function getSubset(mode){
-  switch(mode){
-    case 'skt': return ALL.filter(r=>norm(r['Status SKT']));
-    case 'skko': return ALL.filter(r=>norm(r['Status SKKO']));
-    case 'nasional': return ALL.filter(r=>norm(r['Lingkup']).toLowerCase().includes('nasional'));
-    case 'lokal': return ALL.filter(r=>{
+/* ========= FILTERING ========= */
+function getSubset(){
+  let rows = ALL.slice();
+  if(state.mode==='nasional'){
+    rows = rows.filter(r=>norm(r['Lingkup']).toLowerCase().includes('nasional'));
+  } else if(state.mode==='lokal'){
+    rows = rows.filter(r=>{
       const s = norm(r['Lingkup']).toLowerCase();
       return s.includes('lokal')||s.includes('daerah');
     });
-    case 'all':
-    default: return ALL.slice();
   }
+  if(state.desa){
+    const q = state.desa.toLowerCase();
+    rows = rows.filter(r=>norm(r['Alamat']).toLowerCase()===q || norm(r['Alamat']).toLowerCase().includes(q));
+  }
+  return rows;
 }
 
 /* ========= TABEL ========= */
@@ -294,27 +326,24 @@ function drawTable(rows){
       autoWidth: true,
       scrollX: true,
       order: [[0,'asc']],
+      deferRender: true,
       language:{
         search:"Cari:",lengthMenu:"Tampilkan _MENU_ entri",zeroRecords:"Tidak ada data",
         info:"Menampilkan _START_–_END_ dari _TOTAL_",infoEmpty:"Tidak ada data",infoFiltered:"(disaring dari _MAX_ total data)"
       }
     });
-    // kunci posisi scroll agar tidak loncat saat sort/paginate/draw
-    let __savedPos = {x:0,y:0};
+    // Kunci posisi scroll agar tidak loncat pada semua event redraw
+    let pos = {x:0,y:0};
+    const cap = ()=>{ pos = lockScrollPos(); };
+    const res = ()=>{ restoreScrollPos(pos); };
     $('#ormasTable')
-      .on('preDraw.dt', function(){
-        __savedPos = __lockScroll();
-        if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
-      })
-      .on('draw.dt', function(){
-        __restoreScroll(__savedPos);
-        setTimeout(()=>__restoreScroll(__savedPos), 30);
-      });
+      .on('preDraw.dt page.dt order.dt search.dt length.dt', cap)
+      .on('draw.dt', res);
   }else{
-    const pos = __lockScroll();
+    const pos = lockScrollPos();
     DT.clear().rows.add(data).draw(false);
-    __restoreScroll(pos);
     DT.columns.adjust();
+    restoreScrollPos(pos);
   }
 }
 
@@ -350,16 +379,9 @@ function renderMap(rows){
   qs('#tip').classList.add('d-none');
   keys.forEach(k=>{
     const g = groups[k];
-    const icon = L.divIcon({
-  html:"<div class='badge-pin'>"+g.items.length+"</div>",
-  className:"",
-  iconSize:[30,26],    // lebar x tinggi
-  iconAnchor:[15,13]
-});
-
+    const icon = L.divIcon({ html:"<div class='badge-pin'>"+g.items.length+"</div>", className:"", iconSize:[36,36], iconAnchor:[18,18] });
     const m = L.marker([g.lat,g.lng], {icon}).addTo(LAYER);
-    const list = g.items.slice(0,12).map(i=>"• "+norm(i['Nama Ormas'])+" | "+norm(i['Lingkup'])+
-      " | SKT:"+(norm(i['Status SKT'])||'-')+" | SKKO:"+(norm(i['Status SKKO'])||'-')).join("<br>");
+    const list = g.items.slice(0,12).map(i=>"• "+norm(i['Nama Ormas'])+" | "+norm(i['Lingkup'])).join("<br>");
     const more = g.items.length>12 ? "<br><em>+"+(g.items.length-12)+" lainnya…</em>" : "";
     m.bindPopup("<strong>"+g.lat.toFixed(6)+", "+g.lng.toFixed(6)+"</strong><br>Total: <b>"+g.items.length+
       "</b><hr>"+list+more);
@@ -369,34 +391,40 @@ function renderMap(rows){
   setTimeout(()=>MAP.invalidateSize(), 50);
 }
 
+/* ========= APPLY FILTERS (NO JUMP) ========= */
+function applyFilters(){
+  const pos = lockScrollPos();
+  const subset = getSubset();
+  qs('#mapSection').classList.remove('d-none');
+  qs('#tableSection').classList.remove('d-none');
+  renderMap(subset);
+  drawTable(subset);
+  restoreScrollPos(pos);
+}
+
 /* ========= EVENTS ========= */
 document.addEventListener('click', e=>{
   const btn = e.target.closest('.filter-badge'); if(!btn) return;
   e.preventDefault();
-
-  // Bekukan posisi sebelum redraw
-  const pos = __lockScroll();
-
   qsa('.filter-badge').forEach(b=>b.classList.toggle('active', b===btn));
-  const subset = getSubset(btn.dataset.mode || 'all');
-
-  qs('#mapSection').classList.remove('d-none');
-  qs('#tableSection').classList.remove('d-none');
-
-  renderMap(subset);
-  drawTable(subset);
-
-  // Pulihkan posisi supaya tidak loncat
-  __restoreScroll(pos);
-  setTimeout(()=>__restoreScroll(pos), 30);
-  setTimeout(()=>__restoreScroll(pos), 120);
+  state.mode = btn.dataset.mode || 'all';
+  applyFilters();
 }, {passive:false});
 
+qs('#desaSelect').addEventListener('change', (e)=>{
+  state.desa = e.target.value.trim();
+  applyFilters();
+});
+
 qs('#reset').addEventListener('click', ()=>{
+  const pos = lockScrollPos();
   qsa('.filter-badge').forEach(b=>b.classList.remove('active'));
+  qs('#desaSelect').value = '';
+  state.mode='all'; state.desa='';
   qs('#mapSection').classList.add('d-none');
   qs('#tableSection').classList.add('d-none');
   if(DT) DT.clear().draw(false);
+  restoreScrollPos(pos);
 });
 
 /* ========= BOOT ========= */
@@ -404,7 +432,7 @@ qs('#reset').addEventListener('click', ()=>{
   try{
     ALL = parseCSV(RAW_CSV, ';');
     updateBadges();
-    // default: peta & tabel disembunyikan sampai user klik badge
+    fillDesaDropdown();
   }catch(err){
     const div = document.createElement('div');
     div.className = 'alert alert-danger';
